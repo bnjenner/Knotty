@@ -27,7 +27,7 @@ class operations():
 		return ( -1 * np.dot(N, p1) )
 
 
-	def distance(self, xp, tp, N_side):
+	def tri_distance(self, xp, tp, N_side):
 
 		return ( np.dot((xp - tp), N_side) / np.linalg.norm(N_side) )
 
@@ -36,15 +36,33 @@ class operations():
 		for i in range(len(side_normals)):
 			p = points[i]
 			n = side_normals[i]
-			dist = operations.distance(R, p, n)
+			dist = operations.tri_distance(R, p, n)
 
 			if dist > 0:
 				return 0
 			elif dist < 0 and i == 2:
 				return 1
 
+	def linear_distance(self, p1, p2):
 
+		return np.sqrt(np.dot(p1, p2))
 
+	def linear(self, points, length):
+
+		total_length = 0 
+
+		for x in range(len(points)-1):
+			inner_list = tuple(points[x:x+2])
+			inner_dist = linear_distance(*inner_list)
+			total_length += inner_dist
+
+			if total_length > length:
+				return 0 
+			else:
+				pass
+
+		if length == total_length:
+			return 1 
 
 
 class knotFinder():
@@ -74,7 +92,7 @@ class knotFinder():
 
 		intersect = operations.tri_intersection(points, Tri_Side_Normals)
 
-		return 
+		return intersect
 
 
 	def figeight(self, protein):
@@ -93,7 +111,12 @@ class knotFinder():
 
 		iterations = 0
 
+		straight_length = operations.linear_distance(sequence[1], sequence[-1])
+
 		while iterations < 500:
+
+			if operations.linear(sequence, straight_length) == 1:
+				return "No Knots"
 
 			for i in range(1, len(sequence) - 3):
 				seq_list = sequence[i-1:i+2]
@@ -117,6 +140,12 @@ class knotFinder():
 					sequence[i] = aa_prime
 
 			iterations += 1
+
+		if operations.linear(sequence, straight_length) == 1:
+				return "No Knots"
+		else:
+			return "Knots"
+
 
 
 class protein():
@@ -152,10 +181,10 @@ def main():
 
 	aa_chain = protein(InputFile)
 
-	result = knotFinder.scan(aa_chain.backbone)
+	#result = knotFinder.scan(aa_chain.backbone)
 
-	with open("OutputFile", "w") as fo:
-		fo.write(result)
+	# with open("OutputFile", "w") as fo:
+	# 	fo.write(result)
 
 
 if __name__ == '__main__':

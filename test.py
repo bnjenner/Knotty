@@ -1,4 +1,4 @@
-import numpy as np
+# import numpy as np
 
 # def triNormal(p1, p2, p3):
 
@@ -26,20 +26,20 @@ import numpy as np
 
 
 
-p1 = [1, 0, 0]
-p2 = [0, 1, 0]
-p3 = [0, 0, 1]
+# p1 = [1, 0, 0]
+# p2 = [0, 1, 0]
+# p3 = [0, 0, 1]
 
-s1 = [2, 2, 2]
-s2 = [1, 1, 1]
+# s1 = [2, 2, 2]
+# s2 = [1, 1, 1]
 
-p1 = np.array(p1)
-p2 = np.array(p2)
-p3 = np.array(p3)
+# p1 = np.array(p1)
+# p2 = np.array(p2)
+# p3 = np.array(p3)
 
-points = [p1, p2, p3]
+# points = [p1, p2, p3]
 
-print(list(map(lambda x : x/3, np.sum(points, axis=0))))
+# print(list(map(lambda x : x/3, np.sum(points, axis=0))))
 
 # s1 = np.array(s1)
 # s2 = np.array(s2)
@@ -82,6 +82,14 @@ print(list(map(lambda x : x/3, np.sum(points, axis=0))))
 # 		seq = seq_list + sequence[j:j+2]
 # 		seq = tuple(seq_list + sequence[j:j+2])
 # 		func(*seq)
+
+def linear(points):
+
+	for x in range(len(points)-1):
+		print(points[x:x+2])
+
+
+linear("ABCDEFGHIJKLMN")
 
 
 
