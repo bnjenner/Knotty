@@ -9,46 +9,58 @@ import re
 
 class operations():
 
-	def triNormal(p1, p2, p3):
+	# Intersection Function based on the Non-Culling Moller Trumbore Algorithm
+	def intersection(A, B, C, O, D):
 
-		return np.cross((p2 - p1), (p3 - p1))
+		E1 = B - A # edge 1
+		E2 = C - A # edge 2
 
+		P = np.cross(D, E2) # P vector for determinant 
+		det = np.dot(E1, P) # determinant
 
-	def triSideNormals(p1, p2, p3, N):
+		if det < 0.000001 and det > -0.000001: # determines if system has solution
+			return 0 
 
-		N_12 = np.cross((p2 - p1), N) 
-		N_23 = np.cross((p3 - p2), N)
-		N_31 = np.cross((p1 - p3), N)
+		inv_det = 1 / det
 
-		return [N_12, N_23, N_31]
+		# vector representing distance from s2 to p1
+		T = O - A
 
+		###
+		# In order for point to be inside triangle, u and v must
+		# be positive and their sum must be less than one.
+		### 
 
-	def plane_dist(p1, N):
+		# solving system for u parameter
+		u = np.dot(T, P) * inv_det
 
-		return ( -1 * np.dot(N, p1) )
+		# check if u is positive
+		if u < 0 or u > 1:
+		 	return 0 
 
+		# solving system for v parameter
+		Q = np.cross(T, E1)
+		v = np.dot(D, Q) * inv_det
 
-	def tri_distance(xp, tp, N_side):
+		# check if v is positive that sum of u and v is no greater than 1
+		if v < 0 or (u + v) > 1:
+			return 0 
 
-		return ( np.dot((xp - tp), N_side) / np.linalg.norm(N_side) )
+		# solving for parameter t
+		# Segment is repsented by S = O + tD
+		# t is the scalar that multiples direction vector so that it intersects with triangle 
+		t = np.dot(E2, Q) * inv_det # distance from origin to point A
 
-	def tri_intersection(ex_point, points, side_normals):
+		# scalar must be no bigger than one, cannot extend passed segment
+		if t > 0 and t < 1:
+			return 1
+		else:
+			return 0 
 
-		R = ex_point
-
-		for i in range(len(side_normals)):
-			p = points[i]
-			n = side_normals[i]
-			dist = operations.tri_distance(R, p, n)
-
-			if dist > 0:
-				return 0
-			elif dist < 0 and i == 2:
-				return 1
 
 	def linear_distance(p1, p2):
 
-		return np.sqrt(np.dot(p1, p2))
+		return np.linalg.norm(p2-p1)
 
 	def linear(points, length):
 
@@ -75,85 +87,92 @@ class knotFinder():
 
 	def trefoil(p1, p2, p3, s1, s2):
 
-
-		N = operations.triNormal(p1, p2, p3)
-
-		points = [p1, p2, p3]
-
-		D = operations.plane_dist(p1, N)
-
-		Unit_N = N / np.linalg.norm(N)
-
-		t = ( np.dot((D + Unit_N), s1) ) / ( np.dot(Unit_N, (s2 - s1)) )
-
-		if t < 0 or t > 1:
-			return 0 
-
-		R = s1 + t * (s2 - s1)
-
-		Tri_Side_Normals = operations.triSideNormals(p1, p2, p3, N)
-
-		intersect = operations.tri_intersection(R, points, Tri_Side_Normals)
-
-		return intersect
-
-
-
-	def figeight(self, protein):
-
-		pass
-
-	def quinqefoil(self, protein):
+		return operations.intersection(p1, p2, p3, s1, s2)
 		
-		pass 
-
-	def pentaknot(self, protein):
-		
-		pass 
 
 	def scan(sequence):
 
 		iterations = 1
 
-		straight_length = operations.linear_distance(sequence[1], sequence[-1])
+		straight_length = operations.linear_distance(sequence[0], sequence[-1])
 
 		while iterations < 501:
+
+			print(iterations)
 
 			if ( ( (iterations / 500) * 100) % 10)  == 0:
 				print("*** ", (iterations / 500 * 100),"% Complete ***", sep="")
 
 			if operations.linear(sequence, straight_length) == 1:
+				print("No Knots")
 				return "No Knots"
 
-			for i in range(1, len(sequence) - 3):
-				seq_list = sequence[i-1:i+2]
-				aa_prime = np.array(list(map(lambda x : x/3, np.sum(seq_list, axis=0))))
+			for i in range(1, len(sequence) - 1):
 
-				prev_list = [sequence[i-1], sequence[i], aa_prime]
-				next_list = [sequence[i], aa_prime, sequence[i+1]]
+				seq_list = sequence[i-1:i+2]
+				i_prime = np.array(list(map(lambda x : x/3, np.sum(seq_list, axis=0))))
+
+				# terminal i is essentiall an i prime
+				if i == 1:
+					prev_i_prime = sequence[0]		
+				else:
+					prev_seq_list = sequence[i-2:i+1]
+					prev_i_prime = np.array(list(map(lambda x : x/3, np.sum(prev_seq_list, axis=0))))
+
+				prev_tri = [prev_i_prime, sequence[i], i_prime]
+				next_tri = [sequence[i], i_prime, sequence[i+1]]
 
 				knot_presence = False
 
-				for j in range(i + 2, len(sequence) - 1):
-					prev_tri = tuple(prev_list + sequence[j-1:j+1])
-					next_tri = tuple(next_list + sequence[j:j+2])
-					prev_knot = knotFinder.trefoil(*prev_tri)
-					next_knot = knotFinder.trefoil(*next_tri)
+				if i < len(sequence) - 3:
+					for j in range(i + 2, len(sequence) - 1):
 
-					if prev_knot == 1 or next_knot == 1:
-						knot_presence = True
-						break
+						line_seg = sequence[j:j+2]
 
-				if knot_presence == False:
-					sequence[i] = aa_prime
+						prev_list = tuple(prev_tri + line_seg)
+						next_list = tuple(next_tri + line_seg)
+						prev_knot = knotFinder.trefoil(*prev_list)
+						next_knot = knotFinder.trefoil(*next_list)
+
+						if prev_knot == 1 or next_knot == 1:
+							print(prev_knot)
+							print(prev_list)
+							print(next_list)
+							knot_presence = True
+							print("Knots")
+							return "Knots"
+
+
+				if i > 2: # if preceding segments are available
+					for k in range(0, i-2): # iterates over previous line segments
+
+						line_seg = sequence[k:k+2]
+
+						prev_list = tuple(prev_tri + line_seg)
+						next_list = tuple(next_tri + line_seg)
+						prev_knot = knotFinder.trefoil(*prev_list)
+						next_knot = knotFinder.trefoil(*next_list)
+
+						if prev_knot == 1 or next_knot == 1:
+							print(prev_knot)
+							print(prev_list)
+							print(next_list)
+							knot_presence = True
+							print("Knots")
+							return "Knots"
+
+				
 				else:
-					return "Knots"
+					knot_presence = True
+					sequence[i] = i_prime
 
 			iterations += 1
 
 		if operations.linear(sequence, straight_length) == 1:
-				return "No Knots"
+			print("No Knots")
+			return "No Knots"
 		else:
+			print("Knots")
 			return "Knots"
 
 
