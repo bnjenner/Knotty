@@ -57,27 +57,16 @@ class operations():
 		else:
 			return 0 
 
+	def colinear(points):
 
-	def linear_distance(p1, p2):
+		for x in range(2, len(points)):
+			mat = np.array([points[x-2], points[x-1], points[x]])
+			det = np.linalg.det(mat)
 
-		return np.linalg.norm(p2-p1)
+			if det * 0.5 != 0:
+				return 0
 
-	def linear(points, length):
-
-		total_length = 0 
-
-		for x in range(len(points)-1):
-			inner_list = tuple(points[x:x+2])
-			inner_dist = operations.linear_distance(*inner_list)
-			total_length += inner_dist
-
-			if total_length > length:
-				return 0 
-			else:
-				pass
-
-		if length == total_length:
-			return 1 
+		return 1 
 
 
 class knotFinder():
@@ -88,13 +77,11 @@ class knotFinder():
 	def trefoil(p1, p2, p3, s1, s2):
 
 		return operations.intersection(p1, p2, p3, s1, s2)
-		
+
 
 	def scan(sequence):
 
 		iterations = 1
-
-		straight_length = operations.linear_distance(sequence[0], sequence[-1])
 
 		while iterations < 501:
 
@@ -103,7 +90,7 @@ class knotFinder():
 			if ( ( (iterations / 500) * 100) % 10)  == 0:
 				print("*** ", (iterations / 500 * 100),"% Complete ***", sep="")
 
-			if operations.linear(sequence, straight_length) == 1:
+			if operations.colinear(sequence) == 1:
 				print("No Knots")
 				return "No Knots"
 
@@ -168,7 +155,7 @@ class knotFinder():
 
 			iterations += 1
 
-		if operations.linear(sequence, straight_length) == 1:
+		if operations.colinear(sequence) == 1:
 			print("No Knots")
 			return "No Knots"
 		else:
