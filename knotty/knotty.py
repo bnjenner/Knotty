@@ -122,9 +122,6 @@ class knotFinder():
 						next_knot = knotFinder.trefoil(*next_list)
 
 						if prev_knot == 1 or next_knot == 1:
-							print(prev_knot)
-							print(prev_list)
-							print(next_list)
 							knot_presence = True
 							print("Knots")
 							return "Knots"
@@ -141,9 +138,6 @@ class knotFinder():
 						next_knot = knotFinder.trefoil(*next_list)
 
 						if prev_knot == 1 or next_knot == 1:
-							print(prev_knot)
-							print(prev_list)
-							print(next_list)
 							knot_presence = True
 							print("Knots")
 							return "Knots"
