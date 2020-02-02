@@ -86,7 +86,7 @@ class knotFinder():
 
 		iterations = 1
 
-		while iterations <= 500:
+		while True:
 
 			if (iterations % 10)  == 0:
 				print("*** Iterations: ", (iterations)," ***", sep="")
@@ -121,13 +121,14 @@ class knotFinder():
 						next_knot = knotFinder.trefoil(*next_list)
 
 						# potential point for not knots
-						if prev_knot == 1 or next_knot == 1:
-							print("Knot")
+						if prev_knot == 1: 
 							knot_presence = True
+							print(prev_list)
 							break
-							#print("Knots")
-							#return "Knots"
-
+						elif next_knot == 1:
+							knot_presence = True
+							print(next_list)
+							break
 
 				if i > 2 and knot_presence != True: # if preceding segments are available
 					for k in range(0, i-2): # iterates over previous line segments
@@ -139,9 +140,13 @@ class knotFinder():
 						prev_knot = knotFinder.trefoil(*prev_list)
 						next_knot = knotFinder.trefoil(*next_list)
 
-						if prev_knot == 1 or next_knot == 1:
-							print("Knot")
+						if prev_knot == 1: 
 							knot_presence = True
+							print(prev_list)
+							break
+						elif next_knot == 1:
+							knot_presence = True
+							print(next_list)
 							break
 				
 				if knot_presence == False:
@@ -163,19 +168,25 @@ class knotFinder():
 
 class protein():
 
-	def __init__(self, InputFile):   
+	def __init__(self, InputFile):
 
 		self.backbone = []
 
 		with open(InputFile, "r") as fi:
 			lines = fi.readlines()
 
-		self.backbone = np.array([list(map(float, line.split())) for line in lines])
+		#elf.backbone = np.array(list(map(float, line.split()))) for line
+
+		temp = list(map(lambda x : re.sub("\s+", ",", x.strip()), lines))
+		temp_lst = list(map(lambda x : x.split(','), temp))
+
+		for point in temp_lst:
+			temp = np.array([float(x) for x in point])
+			self.backbone.append(temp)
 
 		
 ############################################
 # Argument Parser 
-
 
 def main():
 	parser = argparse.ArgumentParser(description='Protein Knot Detection')
