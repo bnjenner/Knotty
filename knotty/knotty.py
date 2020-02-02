@@ -86,7 +86,7 @@ class knotFinder():
 
 		iterations = 1
 
-		while True:
+		while iterations <= 500:
 
 			if (iterations % 10)  == 0:
 				print("*** Iterations: ", (iterations)," ***", sep="")
@@ -163,23 +163,19 @@ class knotFinder():
 
 class protein():
 
-	def __init__(self, InputFile):
+	def __init__(self, InputFile):   
 
 		self.backbone = []
 
 		with open(InputFile, "r") as fi:
 			lines = fi.readlines()
 
-		temp = list(map(lambda x : re.sub("\s+", ",", x.strip()), lines))
-		temp_lst = list(map(lambda x : x.split(','), temp))
+		self.backbone = np.array([list(map(float, line.split())) for line in lines])
 
-		for point in temp_lst:
-			temp = np.array([float(x) for x in point])
-			self.backbone.append(temp)
-
-
+		
 ############################################
 # Argument Parser 
+
 
 def main():
 	parser = argparse.ArgumentParser(description='Protein Knot Detection')
