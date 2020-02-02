@@ -10,13 +10,15 @@ import re
 class operations():
 
 	# Intersection Function based on the Non-Culling Moller Trumbore Algorithm
-	def intersection(A, B, C, O, D):
+	def intersection(A, B, C, O, E):
 
 		E1 = B - A # edge 1
 		E2 = C - A # edge 2
 
+		D = (E - O) - A
+
 		P = np.cross(D, E2) # P vector for determinant 
-		det = np.dot(E1, P) # determinant
+		det = np.dot(P, E1) # determinant
 
 		if det < 0.000001 and det > -0.000001: # determines if system has solution
 			return 0 
@@ -52,10 +54,11 @@ class operations():
 		t = np.dot(E2, Q) * inv_det # distance from origin to point A
 
 		# scalar must be no bigger than one, cannot extend passed segment
-		if t > 0 and t < 1:
-			return 1
-		else:
+		if t < 0 or t > 1:
 			return 0 
+		else:
+			return 1
+
 
 	def colinear(points):
 
@@ -83,14 +86,14 @@ class knotFinder():
 
 		iterations = 1
 
-		while iterations < 501:
+		while True:
 
-			print(iterations)
+			if (iterations % 10)  == 0:
+				print("*** Iterations: ", (iterations)," ***", sep="")
 
-			if ( ( (iterations / 500) * 100) % 10)  == 0:
-				print("*** ", (iterations / 500 * 100),"% Complete ***", sep="")
-
-			if operations.colinear(sequence) == 1:
+			coline_check = operations.colinear(sequence)
+			if coline_check == 1:
+				print(coline_check)
 				print("No Knots")
 				return "No Knots"
 
@@ -100,13 +103,9 @@ class knotFinder():
 				i_prime = np.array(list(map(lambda x : x/3, np.sum(seq_list, axis=0))))
 
 				# terminal i is essentiall an i prime
-				if i == 1:
-					prev_i_prime = sequence[0]		
-				else:
-					prev_seq_list = sequence[i-2:i+1]
-					prev_i_prime = np.array(list(map(lambda x : x/3, np.sum(prev_seq_list, axis=0))))
+				prev_i = sequence[i-1]		
 
-				prev_tri = [prev_i_prime, sequence[i], i_prime]
+				prev_tri = [prev_i, sequence[i], i_prime]
 				next_tri = [sequence[i], i_prime, sequence[i+1]]
 
 				knot_presence = False
@@ -121,13 +120,16 @@ class knotFinder():
 						prev_knot = knotFinder.trefoil(*prev_list)
 						next_knot = knotFinder.trefoil(*next_list)
 
+						# potential point for not knots
 						if prev_knot == 1 or next_knot == 1:
+							print("Knot")
 							knot_presence = True
-							print("Knots")
-							return "Knots"
+							break
+							#print("Knots")
+							#return "Knots"
 
 
-				if i > 2: # if preceding segments are available
+				if i > 2 and knot_presence != True: # if preceding segments are available
 					for k in range(0, i-2): # iterates over previous line segments
 
 						line_seg = sequence[k:k+2]
@@ -138,16 +140,17 @@ class knotFinder():
 						next_knot = knotFinder.trefoil(*next_list)
 
 						if prev_knot == 1 or next_knot == 1:
+							print("Knot")
 							knot_presence = True
-							print("Knots")
-							return "Knots"
-
+							break
 				
-				else:
-					knot_presence = True
+				if knot_presence == False:
 					sequence[i] = i_prime
+				else:
+					knot_presence = False
 
 			iterations += 1
+
 
 		if operations.colinear(sequence) == 1:
 			print("No Knots")
@@ -173,6 +176,7 @@ class protein():
 		for point in temp_lst:
 			temp = np.array([float(x) for x in point])
 			self.backbone.append(temp)
+
 
 ############################################
 # Argument Parser 
