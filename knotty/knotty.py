@@ -15,7 +15,7 @@ class operations():
 		E1 = B - A # edge 1
 		E2 = C - A # edge 2
 
-		D = (E - O) - A
+		D = (E - O)
 
 		P = np.cross(D, E2) # P vector for determinant 
 		det = np.dot(P, E1) # determinant
@@ -122,12 +122,16 @@ class knotFinder():
 
 						# potential point for not knots
 						if prev_knot == 1: 
+							print("i-1, i, i prime")
 							knot_presence = True
 							print(prev_list)
+							print("\n")
 							break
 						elif next_knot == 1:
+							print("i, i prime, i+1")
 							knot_presence = True
 							print(next_list)
+							print("\n")
 							break
 
 				if i > 2 and knot_presence != True: # if preceding segments are available
@@ -141,14 +145,18 @@ class knotFinder():
 						next_knot = knotFinder.trefoil(*next_list)
 
 						if prev_knot == 1: 
+							print("i-1, i, i prime")
 							knot_presence = True
 							print(prev_list)
+							print("\n")
 							break
 						elif next_knot == 1:
+							print("i, i prime, i+1")
 							knot_presence = True
 							print(next_list)
+							print("\n")
 							break
-				
+
 				if knot_presence == False:
 					sequence[i] = i_prime
 				else:
@@ -175,7 +183,7 @@ class protein():
 		with open(InputFile, "r") as fi:
 			lines = fi.readlines()
 
-		#elf.backbone = np.array(list(map(float, line.split()))) for line
+		#self.backbone = np.array(list(map(float, line.split()))) for line
 
 		temp = list(map(lambda x : re.sub("\s+", ",", x.strip()), lines))
 		temp_lst = list(map(lambda x : x.split(','), temp))
