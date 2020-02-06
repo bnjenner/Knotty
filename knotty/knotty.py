@@ -157,7 +157,7 @@ class knotFinder():
 							print("\n")
 							break
 
-				if knot_presence == False:
+				if knot_presence == False:		
 					sequence[i] = i_prime
 				else:
 					knot_presence = False
@@ -183,15 +183,7 @@ class protein():
 		with open(InputFile, "r") as fi:
 			lines = fi.readlines()
 
-		#self.backbone = np.array(list(map(float, line.split()))) for line
-
-		temp = list(map(lambda x : re.sub("\s+", ",", x.strip()), lines))
-		temp_lst = list(map(lambda x : x.split(','), temp))
-
-		for point in temp_lst:
-			temp = np.array([float(x) for x in point])
-			self.backbone.append(temp)
-
+		self.backbone = [np.array(list(map(float, line.split()))) for line in lines]
 		
 ############################################
 # Argument Parser 
