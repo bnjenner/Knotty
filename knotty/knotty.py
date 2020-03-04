@@ -128,16 +128,14 @@ class operations():
 		E1 = B - C
 		E2 = A - C
 
-
 		proj = ( np.dot(E1, E2) / ( np.linalg.norm(E2) * np.linalg.norm(E2)) ) * E1
 
 		d = np.linalg.norm(( E1 - proj )) 
 
-		if d <= 0.05:
+		if d < Epsilon:
 			return 1
 		else:
 		 	return 0
-		#return 0
 
 	def forward_search(prev_tri, next_tri, next_node):
         
@@ -196,7 +194,7 @@ class operations():
 
 class knotFinder():
 
-	def __init__(self):
+	def __init__(self):		
 		pass
 
 	def trefoil(p1, p2, p3, s1, s2):
@@ -280,7 +278,7 @@ class knotFinder():
 			return 1
 
 
-	def scan_aux(head, MaxIterations=250):
+	def scan_aux(head):
 
 		iterations = 1
 
@@ -335,17 +333,21 @@ def main():
 	parser.add_argument('-i','--input', help='file of amino acid sequence coordinates', required=True)
 	parser.add_argument('-o','--output', help='name of output file. If not specified, default is given with overwrite capabilities', required=True)
 	parser.add_argument('-m','--max-iterations', help='maximum number of iterations for smoother algorithm (default: 250).', type=int, default=250)
+	parser.add_argument('-e','--epsilon', help='threshold (in Angstroms) for determining colinearity of alpha carbons.', type=float, default=0.05)
 	args = vars(parser.parse_args())
+
+	global MaxIterations
+	global Epsilon
 
 	InputFile = args["input"]
 	OutputFile = args["output"]
 	MaxIterations = args["max_iterations"]
-	
+	Epsilon = args["epsilon"]
 
 	pro_sequence = protein(InputFile)
 
 	aa_chain = pro_sequence.backbone
-	result = knotFinder.scan_aux(aa_chain, MaxIterations)
+	result = knotFinder.scan_aux(aa_chain)
 
 	# with open(OutputFile, "w") as fo:
 	# 	fo.write(result)
