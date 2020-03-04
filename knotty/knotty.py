@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 ######################
 #
 # Knotty 
@@ -16,6 +18,7 @@ class dll_object():
 		self.coord = data
 		self.before = None
 		self.after = None
+		self.knot = False
 
 	def get_data(self):
 		return self.coord
@@ -31,6 +34,12 @@ class dll_object():
 
 	def get_before(self):
 		return self.before
+
+	def set_status(self, status):
+		self.knot = status
+
+	def get_status(self):
+		return self.knot
 
 
 class operations():
@@ -114,30 +123,75 @@ class operations():
 		else:
 			return 1
 
-
 	def tube_eval(A, B, C):
 
 		E1 = B - C
 		E2 = A - C
 
 
-		proj = ( np.dot(E1, E2) / ( np.linalg.norm(E2) * np.linalg.norm(E2)) ) * E2
+		proj = ( np.dot(E1, E2) / ( np.linalg.norm(E2) * np.linalg.norm(E2)) ) * E1
 
 		d = np.linalg.norm(( E1 - proj )) 
 
-		if d <= 0.5:
+		if d <= 0.05:
 			return 1
 		else:
 		 	return 0
+		#return 0
+
+	def forward_search(prev_tri, next_tri, next_node):
+        
+		line_start = next_node.get_next() 
+		if line_start != None:
+			line_end = line_start.get_next()
+
+			while line_end != None:
+
+				line_seg = [line_start.get_data(), line_end.get_data()]
+
+				next_list = tuple(next_tri + line_seg)
+				next_knot = knotFinder.trefoil(*next_list)
+
+				if next_knot == 1:
+					return 1
+
+				prev_list = tuple(prev_tri + line_seg)
+				prev_knot = knotFinder.trefoil(*prev_list)
+
+				if prev_knot == 1:
+					return 1
+
+				line_start = line_end
+				line_end = line_end.get_next()
+
+		return 0
+
+	def backward_search(prev_tri, next_tri, prev_node):
+
+		line_start = prev_node.get_before()
+		line_end = line_start.get_before()
+		
+		while line_end != None:
+
+			line_seg = [line_start.get_data(), line_end.get_data()]
 
 
-	def forward_search(llist):
+			next_list = tuple(next_tri + line_seg)
+			next_knot = knotFinder.trefoil(*next_list)
 
-		pass
+			if next_knot == 1:
+				return 1
 
-	def backward_search(llist):
+			prev_list = tuple(prev_tri + line_seg)
+			prev_knot = knotFinder.trefoil(*prev_list)
 
-		pass 
+			if prev_knot == 1:
+				return 1
+
+			line_start = line_end
+			line_end = line_start.get_before()	
+
+		return 0
 
 
 class knotFinder():
@@ -158,14 +212,12 @@ class knotFinder():
 
 		smoothed = True
 
-		while True:
+		while next_node != None:
 
-			if next_node == None :
-				break
-
-			colinear_check = operations.tube_eval(prev_node.get_data(),
-												  curr_node.get_data(), 
-												  next_node.get_data())
+			if curr_node.get_status() != True:
+				colinear_check = operations.tube_eval(prev_node.get_data(),
+													  curr_node.get_data(), 
+													  next_node.get_data())
 			
 			if colinear_check == 1:
 				prev_node.set_next(next_node) # node deletion
@@ -182,79 +234,32 @@ class knotFinder():
 
 			smoothed = False
 
-			try:
-				seq_list = [prev_node.get_data(), curr_node.get_data(), next_node.get_data()] # list of i-1, i, and i+1
-			except:
-				print(colinear_check)
-				print(prev_node, curr_node, next_node)
-				exit()
+			seq_list = [prev_node.get_data(), curr_node.get_data(), next_node.get_data()] # list of i-1, i, and i+1
 
 			i_prime = np.array(list(map(lambda x : x/3, np.sum(seq_list, axis=0)))) # i' calculation 
-			prev_i = prev_node.get_data() # previous i 
 
-			prev_tri = [prev_i, seq_list[1], i_prime] # first triangle
+			prev_tri = [seq_list[0], seq_list[1], i_prime] # first triangle
 			next_tri = [seq_list[1], i_prime, seq_list[2]] # second triangle
 
 			knot_presence = False
-
-			line_start = next_node.get_next() 
-			if line_start != None:
-				line_end = line_start.get_next()
-
-				while line_end != None:
-
-					line_seg = [line_start.get_data(), line_end.get_data()]
-
-					prev_list = tuple(prev_tri + line_seg)
-					next_list = tuple(next_tri + line_seg)
-					prev_knot = knotFinder.trefoil(*prev_list)
-					next_knot = knotFinder.trefoil(*next_list)
-
-					# potential point for not knots
-					if prev_knot == 1: 
-						knot_presence = True
-						break
-
-
-					elif next_knot == 1:
-						knot_presence = True
-						break
-
-					line_start = line_end
-					line_end = line_end.get_next()
-
-
+		
 			if prev_node != head:
-				line_start = prev_node.get_before()
-				line_end = line_start.get_before()
+				backward_result = operations.backward_search(prev_tri, next_tri, prev_node)
+			else:
+				backward_result = 0
 
-				while line_end != None and knot_presence == False:
+			if backward_result == 0:
+				forward_result = operations.forward_search(prev_tri, next_tri, next_node)
+			else:
+				forward_result = 1
 
-					line_seg = [line_start.get_data(), line_end.get_data()]
+			if forward_result == 1 or backward_result == 1:
+				if curr_node.get_status() != True:
+					curr_node.set_status(True)
 
-					prev_list = tuple(prev_tri + line_seg)
-					next_list = tuple(next_tri + line_seg)
-					prev_knot = knotFinder.trefoil(*prev_list)
-					next_knot = knotFinder.trefoil(*next_list)
-
-					# potential point for not knots
-					if prev_knot == 1: 
-						knot_presence = True
-						break
-
-
-					elif next_knot == 1:
-						knot_presence = True
-						break
-
-					if line_end.get_before() != None:
-						line_end = line_end.get_before()
-						line_start = line_end.get_next()
-					else:
-						break		
-
-
-			if knot_presence == True:	
+				knot_presence = True
+						
+			if knot_presence == True:
 				prev_node = curr_node
 				curr_node = prev_node.get_next()
 				next_node = curr_node.get_next()
@@ -275,28 +280,23 @@ class knotFinder():
 			return 1
 
 
-	def scan_aux(head):
+	def scan_aux(head, MaxIterations=250):
 
 		iterations = 1
 
 		while True:
 
-			if (iterations % 10)  == 0:
-				print("*** Iterations: ", (iterations)," ***", sep="")
-
 			knots = knotFinder.scan(head)
 
 			iterations += 1
 
-			if knots == 0:
-				print("--- %s seconds ---" % (time.time() - start_time))
-				operations.visualize(head)
-				return "No Knots"
+			if (iterations % 10) == 0:
+				print("*** Iterations: ", (iterations)," ***", sep="")
 
-			if iterations > 500:
+			if iterations >= MaxIterations or knots == 0:
 				print("--- %s seconds ---" % (time.time() - start_time))
 				operations.visualize(head)
-				return "Knots"
+				return
 			
 
 class protein():
@@ -327,8 +327,6 @@ class protein():
 
 
 
-
-
 ############################################
 # Argument Parser 
 
@@ -336,16 +334,18 @@ def main():
 	parser = argparse.ArgumentParser(description='Protein Knot Detection')
 	parser.add_argument('-i','--input', help='file of amino acid sequence coordinates', required=True)
 	parser.add_argument('-o','--output', help='name of output file. If not specified, default is given with overwrite capabilities', required=True)
+	parser.add_argument('-m','--max-iterations', help='maximum number of iterations for smoother algorithm (default: 250).', type=int, default=250)
 	args = vars(parser.parse_args())
 
 	InputFile = args["input"]
 	OutputFile = args["output"]
+	MaxIterations = args["max_iterations"]
+	
 
 	pro_sequence = protein(InputFile)
 
 	aa_chain = pro_sequence.backbone
-
-	result = knotFinder.scan_aux(aa_chain)
+	result = knotFinder.scan_aux(aa_chain, MaxIterations)
 
 	# with open(OutputFile, "w") as fo:
 	# 	fo.write(result)
