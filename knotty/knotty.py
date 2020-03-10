@@ -5,6 +5,7 @@
 # Knotty 
 #
 ######################
+
 import argparse
 import numpy as np
 from mpl_toolkits.mplot3d import axes3d
@@ -326,7 +327,6 @@ class knotFinder():
 					print("*** Knot possible at amino acids", knot_list, "***")
 
 				print("*** Time Elapsed: %s seconds ***" % round((time.time() - start_time), 2))
-				#operations.visualize(head)
 				return
 
 			if knots == 0:
@@ -381,36 +381,110 @@ class protein():
 				fo.write("\t".join(temp) + "\n")
 				current = current.get_next()
 
+############################################
 
+class findApp():
+
+	def __init__(self):
+		self.verbose = False
+
+	def start(self, InputFile, OutputFile, max_iterations, epsilon):
+
+		global MaxIterations
+		global Epsilon 
+
+		MaxIterations = max_iterations
+		Epsilon = epsilon
+
+
+		pro_sequence = protein(InputFile)
+		aa_chain = pro_sequence.backbone
+
+		print("*** Beginning Knot Detection... ***")
+		print("*** Max Iterations:", MaxIterations, "Epsilon:", Epsilon, "***")
+
+		knotFinder.scan_aux(aa_chain)
+
+		pro_sequence.crd_write(OutputFile)
+
+
+class visualizeApp():
+
+	def __init__(self):
+		self.verbose = False
+
+	def start(self, InputFile):
+
+		pro_sequence = protein(InputFile)
+		aa_chain = pro_sequence.backbone
+
+		operations.visualize(aa_chain)
 
 
 ############################################
-# Argument Parser 
+# find 
+
+def findParser(subparsers):
+	find_parser = subparsers.add_parser('find', help='Protein knot detection tool')
+	find_parser.add_argument('-i','--input', help='file of amino acid sequence coordinates', dest="InputFile", required=True)
+	find_parser.add_argument('-o','--output', help='name of output file. If not specified, default is given with overwrite capabilities', dest="OutputFile", required=True)
+	find_parser.add_argument('-m','--max-iterations', help='maximum number of iterations for smoothing algorithm (default: 250).', dest="max_iterations", type=int, default=250)
+	find_parser.add_argument('-e','--epsilon', help='threshold (in Angstroms) for approximating colinearity of alpha carbons (default: 0.25).', dest="epsilon", type=float, default=0.25)
+	
+	return find_parser
+
+class findCMD():
+
+	def __init__(self):
+		pass
+
+	def execute(self, args):
+   		app = findApp()
+   		return app.start(args.InputFile, args.OutputFile, args.max_iterations, args.epsilon) 
+
+############################################
+# visualize
+
+def visualizeParser(subparsers):
+	visualize_parser = subparsers.add_parser('visualize', help='Interactive 3D protein coordinate visualization tool')
+	visualize_parser.add_argument('-i','--input', help='file of amino acid sequence coordinates', dest="InputFile", required=True)
+	
+	return visualize_parser
+
+class visualizeCMD():
+
+	def __init__(self):
+		pass
+
+	def execute(self, args):
+   		app = visualizeApp()
+   		return app.start(args.InputFile) 
+
+
+#####################################################################################
+
+def parseArgs():
+    parser = argparse.ArgumentParser(
+        description='Knotty is a program for detecting and visualizing knots in protein structures.', add_help=True,
+        epilog="For questions or comments, contact somebody else.")
+    subparsers = parser.add_subparsers(help='commands', dest='command')
+    findParser(subparsers)
+    visualizeParser(subparsers)
+    args = parser.parse_args()
+    return args
+
 
 def main():
-	parser = argparse.ArgumentParser(description='Protein Knot Detection')
-	parser.add_argument('-i','--input', help='file of amino acid sequence coordinates', required=True)
-	parser.add_argument('-o','--output', help='name of output file. If not specified, default is given with overwrite capabilities', required=True)
-	parser.add_argument('-m','--max-iterations', help='maximum number of iterations for smoother algorithm (default: 250).', type=int, default=250)
-	parser.add_argument('-e','--epsilon', help='threshold (in Angstroms) for determining colinearity of alpha carbons (default: 0.25).', type=float, default=0.25)
-	args = vars(parser.parse_args())
 
-	global MaxIterations
-	global Epsilon
+	find = findCMD()
+	visualize = visualizeCMD()
 
-	InputFile = args["input"]
-	OutputFile = args["output"]
-	MaxIterations = args["max_iterations"]
-	Epsilon = args["epsilon"]
+	global MaxIterations 
+	global Epsilon 
 
-	pro_sequence = protein(InputFile)
-	aa_chain = pro_sequence.backbone
-
-	print("*** Beginning Knot Detection... ***")
-	print("*** Max Iterations:", MaxIterations, "Epsilon:", Epsilon, "***")
-	knotFinder.scan_aux(aa_chain)
-
-	pro_sequence.crd_write(OutputFile)
+	commands = {'find':find, 'visualize':visualize}
+	args = parseArgs()
+	commands[args.command].execute(args)
 
 
 if __name__ == '__main__':
