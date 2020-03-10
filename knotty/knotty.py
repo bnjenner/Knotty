@@ -7,7 +7,6 @@
 ######################
 import argparse
 import numpy as np
-import re
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 import time
@@ -19,6 +18,7 @@ class dll_object():
 		self.before = None
 		self.after = None
 		self.knot = False
+		self.pos = None
 
 	def get_data(self):
 		return self.coord
@@ -40,6 +40,12 @@ class dll_object():
 
 	def get_status(self):
 		return self.knot
+
+	def set_pos(self, pos):
+		self.pos = pos
+
+	def get_pos(self):
+		return self.pos
 
 
 class operations():
@@ -253,7 +259,9 @@ class knotFinder():
 
 			if forward_result == 1 or backward_result == 1:
 				if curr_node.get_status() != True:
+					prev_node.set_status(True)
 					curr_node.set_status(True)
+					next_node.set_status(True)
 
 				knot_presence = True
 						
@@ -263,6 +271,7 @@ class knotFinder():
 				next_node = curr_node.get_next()
 			else:
 				new_node = dll_object(i_prime)
+				new_node.set_pos(curr_node.get_pos())
 				prev_node.set_next(new_node) 
 				new_node.set_next(next_node) 
 				new_node.set_before(prev_node)
@@ -288,13 +297,43 @@ class knotFinder():
 
 			iterations += 1
 
-			if (iterations % 10) == 0:
+			if (iterations % 50) == 0:
 				print("*** Iterations: ", (iterations)," ***", sep="")
 
-			if iterations >= MaxIterations or knots == 0:
-				print("--- %s seconds ---" % (time.time() - start_time))
-				operations.visualize(head)
+
+			if iterations >= MaxIterations:
+
+				knot_pos = []
+				current = head
+
+				while current != None:
+
+					if current.get_status() == True:
+						knot_pos.append(str(current.get_pos()))
+					
+					current = current.get_next()
+
+
+				if len(knot_pos) == 0:
+
+					print("*** Max iterations reached, but no knot could be detected. ***")
+					print("*** If complete smoothing is required, an increase in Epsilon or ***")
+					print("*** 	the number of iterations is recommended. ***")
+
+				else:
+					knot_list = ", ".join(knot_pos)
+					print("*** Max iterations reached and a knot is likely. ***")
+					print("*** Knot possible at amino acids", knot_list, "***")
+
+				print("*** Time Elapsed: %s seconds ***" % round((time.time() - start_time), 2))
+				#operations.visualize(head)
 				return
+
+			if knots == 0:
+				print("*** Smoothing was able to be completed. No knot is likely present ***")
+				print("*** Time Elapsed: %s seconds ***" % round((time.time() - start_time), 2))
+				return
+
 			
 
 class protein():
@@ -309,19 +348,39 @@ class protein():
 
 		node, node_before, head = None, None, None
 
+		pos = 0
+
 		for line in lines:
 			data = np.array(list(map(float, line.split())))
 
 			if head is None:
 				head = dll_object(data)
+				head.set_pos(pos)
 				node = head
+				pos += 1
+				
 
 			else:
 				node_before, node = node, dll_object(data)
 				node.set_before(node_before)
+				node.set_pos(pos)
 				node_before.set_next(node)
+				pos += 1
 
 		self.backbone = head
+
+
+	def crd_write(self, OutputFile):
+
+		with open(OutputFile, "w") as fo:
+
+			current = self.backbone
+
+			while current != None:
+				temp = list(map(str, list(current.get_data())))	
+				fo.write("\t".join(temp) + "\n")
+				current = current.get_next()
+
 
 
 
@@ -333,7 +392,7 @@ def main():
 	parser.add_argument('-i','--input', help='file of amino acid sequence coordinates', required=True)
 	parser.add_argument('-o','--output', help='name of output file. If not specified, default is given with overwrite capabilities', required=True)
 	parser.add_argument('-m','--max-iterations', help='maximum number of iterations for smoother algorithm (default: 250).', type=int, default=250)
-	parser.add_argument('-e','--epsilon', help='threshold (in Angstroms) for determining colinearity of alpha carbons.', type=float, default=0.05)
+	parser.add_argument('-e','--epsilon', help='threshold (in Angstroms) for determining colinearity of alpha carbons (default: 0.25).', type=float, default=0.25)
 	args = vars(parser.parse_args())
 
 	global MaxIterations
@@ -345,12 +404,13 @@ def main():
 	Epsilon = args["epsilon"]
 
 	pro_sequence = protein(InputFile)
-
 	aa_chain = pro_sequence.backbone
-	result = knotFinder.scan_aux(aa_chain)
 
-	# with open(OutputFile, "w") as fo:
-	# 	fo.write(result)
+	print("*** Beginning Knot Detection... ***")
+	print("*** Max Iterations:", MaxIterations, "Epsilon:", Epsilon, "***")
+	knotFinder.scan_aux(aa_chain)
+
+	pro_sequence.crd_write(OutputFile)
 
 
 if __name__ == '__main__':
