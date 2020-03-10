@@ -12,6 +12,12 @@ from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 import time
 
+#####################################################################################
+# data structure classes
+
+############################################
+# doubly-linked list
+
 class dll_object():
 
 	def __init__(self, data):
@@ -49,6 +55,46 @@ class dll_object():
 		return self.pos
 
 
+############################################
+# protein class
+
+class protein():
+
+	def __init__(self, InputFile):
+
+    # creates a doubly linked list with each node being of Class "dll_object"
+    # returns the head of the list aka one of the termini of the protein
+
+		with open(InputFile, "r") as fi:
+				lines = fi.readlines()
+
+		node, node_before, head = None, None, None
+
+		pos = 0
+
+		for line in lines:
+			data = np.array(list(map(float, line.split())))
+
+			if head is None:
+				head = dll_object(data)
+				head.set_pos(pos)
+				node = head
+				pos += 1
+				
+
+			else:
+				node_before, node = node, dll_object(data)
+				node.set_before(node_before)
+				node.set_pos(pos)
+				node_before.set_next(node)
+				pos += 1
+
+		self.backbone = head
+
+
+#####################################################################################
+# operations class 
+
 class operations():
 
 	def visualize(head):
@@ -77,7 +123,20 @@ class operations():
 
 		ax.plot_wireframe(X, Y, Z)
 
-		plt.show() 
+		plt.show()
+
+
+	def crd_write(head, OutputFile):
+
+		with open(OutputFile, "w") as fo:
+
+			current = head
+
+			while current != None:
+				temp = list(map(str, list(current.get_data())))	
+				fo.write("\t".join(temp) + "\n")
+				current = current.get_next()
+				
 
 	# Intersection Function based on the Non-Culling Moller Trumbore Algorithm
 	def intersection(A, B, C, O, E):
@@ -198,6 +257,9 @@ class operations():
 
 		return 0
 
+
+#####################################################################################
+# knot finder 
 
 class knotFinder():
 
@@ -334,54 +396,12 @@ class knotFinder():
 				print("*** Time Elapsed: %s seconds ***" % round((time.time() - start_time), 2))
 				return
 
-			
 
-class protein():
-
-	def __init__(self, InputFile):
-
-    # creates a doubly linked list with each node being of Class "dll_object"
-    # returns the head of the list aka one of the termini of the protein
-
-		with open(InputFile, "r") as fi:
-				lines = fi.readlines()
-
-		node, node_before, head = None, None, None
-
-		pos = 0
-
-		for line in lines:
-			data = np.array(list(map(float, line.split())))
-
-			if head is None:
-				head = dll_object(data)
-				head.set_pos(pos)
-				node = head
-				pos += 1
-				
-
-			else:
-				node_before, node = node, dll_object(data)
-				node.set_before(node_before)
-				node.set_pos(pos)
-				node_before.set_next(node)
-				pos += 1
-
-		self.backbone = head
-
-
-	def crd_write(self, OutputFile):
-
-		with open(OutputFile, "w") as fo:
-
-			current = self.backbone
-
-			while current != None:
-				temp = list(map(str, list(current.get_data())))	
-				fo.write("\t".join(temp) + "\n")
-				current = current.get_next()
+#####################################################################################
+# app mains
 
 ############################################
+# find 
 
 class findApp():
 
@@ -405,8 +425,10 @@ class findApp():
 
 		knotFinder.scan_aux(aa_chain)
 
-		pro_sequence.crd_write(OutputFile)
+		operations.crd_write(aa_chain, OutputFile)
 
+############################################
+# visualize
 
 class visualizeApp():
 
@@ -420,6 +442,9 @@ class visualizeApp():
 
 		operations.visualize(aa_chain)
 
+
+#####################################################################################
+# argument parser
 
 ############################################
 # find 
@@ -461,7 +486,8 @@ class visualizeCMD():
    		return app.start(args.InputFile) 
 
 
-#####################################################################################
+############################################
+# functions
 
 def parseArgs():
     parser = argparse.ArgumentParser(
@@ -473,6 +499,9 @@ def parseArgs():
     args = parser.parse_args()
     return args
 
+
+#####################################################################################
+# main
 
 def main():
 
