@@ -74,20 +74,22 @@ class protein():
 
 		for line in lines:
 			data = np.array(list(map(float, line.split())))
+			
+			if len(data) != 0: #remove empty list from extra newline characters
 
-			if head is None:
-				head = dll_object(data)
-				head.set_pos(pos)
-				node = head
-				pos += 1
-				
+				if head is None:
+					head = dll_object(data)
+					head.set_pos(pos)
+					node = head
+					pos += 1
+					
 
-			else:
-				node_before, node = node, dll_object(data)
-				node.set_before(node_before)
-				node.set_pos(pos)
-				node_before.set_next(node)
-				pos += 1
+				else:
+					node_before, node = node, dll_object(data)
+					node.set_before(node_before)
+					node.set_pos(pos)
+					node_before.set_next(node)
+					pos += 1
 
 		self.backbone = head
 
