@@ -97,6 +97,10 @@ class protein():
 
 class operations():
 
+
+	############################################
+	# user interface 
+
 	def visualize(head):
 
 		X = []
@@ -136,10 +140,13 @@ class operations():
 				temp = list(map(str, list(current.get_data())))	
 				fo.write("\t".join(temp) + "\n")
 				current = current.get_next()
-				
 
-	# Intersection Function based on the Non-Culling Moller Trumbore Algorithm
-	def intersection(A, B, C, O, E):
+
+
+	############################################
+	# mathematical operations 
+
+	def intersection(A, B, C, O, E): # Intersection Function based on the Non-Culling Moller Trumbore Algorithm
 
 
 		E1 = B - A # edge 1
@@ -189,9 +196,9 @@ class operations():
 		else:
 			return 1
 
-	def tube_eval(A, B, C):
+	def tube_eval(A, B, C): # Projection based collinearity approximation tool
 
-		E1 = B - C
+		E1 = B - C 
 		E2 = A - C
 
 		proj = ( np.dot(E1, E2) / ( np.linalg.norm(E2) * np.linalg.norm(E2)) ) * E1
@@ -202,6 +209,10 @@ class operations():
 			return 1
 		else:
 		 	return 0
+
+
+	############################################
+	# knot finding traversals
 
 	def forward_search(prev_tri, next_tri, next_node):
         
