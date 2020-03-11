@@ -466,7 +466,7 @@ def findParser(subparsers):
 	find_parser = subparsers.add_parser('find', help='Protein knot detection tool')
 	find_parser.add_argument('-i','--input', help='file of amino acid sequence coordinates', dest="InputFile", required=True)
 	find_parser.add_argument('-o','--output', help='name of output file. If not specified, default is given with overwrite capabilities', dest="OutputFile", required=True)
-	find_parser.add_argument('-m','--max-iterations', help='maximum number of iterations for smoothing algorithm (default: 250).', dest="max_iterations", type=int, default=250)
+	find_parser.add_argument('-m','--max-iterations', help='maximum number of iterations for smoothing algorithm (default: 300).', dest="max_iterations", type=int, default=300)
 	find_parser.add_argument('-e','--epsilon', help='threshold (in Angstroms) for approximating colinearity of alpha carbons (default: 0.25).', dest="epsilon", type=float, default=0.25)
 	
 	return find_parser
