@@ -401,7 +401,7 @@ class knotFinder():
 
 				if len(knot_pos) == 0:
 
-					print("*** Max iterations reached and no knot detected Visualize to be sure. ***")
+					print("*** Max iterations reached and no knot detected. Visualize to be sure. ***")
 					print("*** If complete smoothing is required, an increase in Epsilon or ***")
 					print("*** 	the number of iterations is recommended. ***")
 
