@@ -401,7 +401,7 @@ class knotFinder():
 
 				if len(knot_pos) == 0:
 
-					print("*** Max iterations reached, but no knot could be detected. ***")
+					print("*** Max iterations reached and no knot detected Visualize to be sure. ***")
 					print("*** If complete smoothing is required, an increase in Epsilon or ***")
 					print("*** 	the number of iterations is recommended. ***")
 
@@ -437,7 +437,6 @@ class findApp():
 
 		MaxIterations = max_iterations
 		Epsilon = epsilon
-
 
 		pro_sequence = protein(InputFile)
 		aa_chain = pro_sequence.backbone
