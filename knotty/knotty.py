@@ -123,10 +123,12 @@ class operations():
 		X = np.array(X)
 		Y = np.array(Y)
 		Z = np.array([np.array(Z[0]), np.array(Z[1])])
-
+		Z_2 = np.array(np.array(Z[0]))
 		fig = plt.figure()
+		
 		ax = fig.add_subplot(111, projection='3d')
-
+		
+		ax.scatter(X, Y, Z_2, c="red")
 		ax.plot_wireframe(X, Y, Z)
 
 		plt.show()
@@ -299,18 +301,18 @@ class knotFinder():
 													  curr_node.get_data(), 
 													  next_node.get_data())
 			
-			if colinear_check == 1:
-				prev_node.set_next(next_node) # node deletion
-				next_node.set_before(prev_node)
-				prev_node = next_node
-				curr_node = next_node.get_next()
+				if colinear_check == 1:
+					prev_node.set_next(next_node) # node deletion
+					next_node.set_before(prev_node)
+					prev_node = next_node
+					curr_node = next_node.get_next()
 
-				if curr_node != None:
-					next_node = curr_node.get_next()
-				else:
-					next_node = None
+					if curr_node != None:
+						next_node = curr_node.get_next()
+					else:
+						next_node = None
 
-				continue
+					continue
 
 			smoothed = False
 
@@ -340,6 +342,13 @@ class knotFinder():
 					next_node.set_status(True)
 
 				knot_presence = True
+
+			else:
+				if curr_node.get_status() != True:
+					prev_node.set_status(False)
+					curr_node.set_status(False)
+					next_node.set_status(False)
+		
 						
 			if knot_presence == True:
 				prev_node = curr_node
@@ -440,6 +449,7 @@ class findApp():
 
 		operations.crd_write(aa_chain, OutputFile)
 
+
 ############################################
 # visualize
 
@@ -466,7 +476,7 @@ def findParser(subparsers):
 	find_parser = subparsers.add_parser('find', help='Protein knot detection tool')
 	find_parser.add_argument('-i','--input', help='file of amino acid sequence coordinates', dest="InputFile", required=True)
 	find_parser.add_argument('-o','--output', help='name of output file. If not specified, default is given with overwrite capabilities', dest="OutputFile", required=True)
-	find_parser.add_argument('-m','--max-iterations', help='maximum number of iterations for smoothing algorithm (default: 300).', dest="max_iterations", type=int, default=300)
+	find_parser.add_argument('-m','--max-iterations', help='maximum number of iterations for smoothing algorithm (default: 250).', dest="max_iterations", type=int, default=250)
 	find_parser.add_argument('-e','--epsilon', help='threshold (in Angstroms) for approximating colinearity of alpha carbons (default: 0.25).', dest="epsilon", type=float, default=0.25)
 	
 	return find_parser
