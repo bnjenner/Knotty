@@ -543,7 +543,7 @@ class visualizeCMD():
 def parseArgs():
     parser = argparse.ArgumentParser(
         description='Knotty is a program for detecting and visualizing knots in protein structures.', add_help=True,
-        epilog="For questions or comments, contact somebody else.")
+        epilog="Last Updated: March 13th, 2020.")
     subparsers = parser.add_subparsers(help='commands', dest='command')
     findParser(subparsers)
     visualizeParser(subparsers)
