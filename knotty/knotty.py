@@ -70,12 +70,12 @@ class protein():
 
 		node, node_before, head = None, None, None
 
-		pos = 0
+		pos = 0 # index for position in polypeptide chain.
 
 		for line in lines:
 			data = np.array(list(map(float, line.split())))
 			
-			if len(data) != 0: #remove empty list from extra newline characters
+			if len(data) != 0: #remove empty list entry from extra newline characters
 
 				if head is None:
 					head = dll_object(data)
@@ -120,10 +120,10 @@ class operations():
 
 			curr_node = curr_node.get_next()
 
-		X = np.array(X)
-		Y = np.array(Y)
-		Z = np.array([np.array(Z[0]), np.array(Z[1])])
-		Z_2 = np.array(np.array(Z[0]))
+		X = np.array(X) # x coord for each node 
+		Y = np.array(Y) # y coord for each node 
+		Z = np.array([np.array(Z[0]), np.array(Z[1])]) # z coord for wire frame 
+		Z_2 = np.array(np.array(Z[0])) # z coord for each node 
 		fig = plt.figure()
 		
 		ax = fig.add_subplot(111, projection='3d')
@@ -135,6 +135,8 @@ class operations():
 
 
 	def crd_write(head, OutputFile):
+
+		# creates a crd file from protein / linked list object 
 
 		with open(OutputFile, "w") as fo:
 
@@ -202,11 +204,14 @@ class operations():
 
 	def tube_eval(A, B, C): # Projection based collinearity approximation tool
 
+		# transforma triangle so edges stem from origin 
 		E1 = B - C 
 		E2 = A - C
 
+		# project vector E1 onto E2
 		proj = ( np.dot(E1, E2) / ( np.linalg.norm(E2) * np.linalg.norm(E2)) ) * E1
 
+		# height of vector perpendicular to projection
 		d = np.linalg.norm(( E1 - proj )) 
 
 		if d < Epsilon:
@@ -220,6 +225,7 @@ class operations():
 
 	def forward_search(prev_tri, next_tri, next_node):
         
+
 		line_start = next_node.get_next() 
 		if line_start != None:
 			line_end = line_start.get_next()
@@ -229,13 +235,13 @@ class operations():
 				line_seg = [line_start.get_data(), line_end.get_data()]
 
 				next_list = tuple(next_tri + line_seg)
-				next_knot = knotFinder.trefoil(*next_list)
+				next_knot = knotFinder.trefoil(*next_list) # calls trefoil function which calls intersection function 
 
 				if next_knot == 1:
 					return 1
 
 				prev_list = tuple(prev_tri + line_seg)
-				prev_knot = knotFinder.trefoil(*prev_list)
+				prev_knot = knotFinder.trefoil(*prev_list) # calls trefoil function which calls intersection function 
 
 				if prev_knot == 1:
 					return 1
@@ -256,13 +262,13 @@ class operations():
 
 
 			next_list = tuple(next_tri + line_seg)
-			next_knot = knotFinder.trefoil(*next_list)
+			next_knot = knotFinder.trefoil(*next_list) # calls trefoil function which calls intersection function 
 
 			if next_knot == 1:
 				return 1
 
 			prev_list = tuple(prev_tri + line_seg)
-			prev_knot = knotFinder.trefoil(*prev_list)
+			prev_knot = knotFinder.trefoil(*prev_list) # calls trefoil function which calls intersection function 
 
 			if prev_knot == 1:
 				return 1
@@ -294,9 +300,12 @@ class knotFinder():
 
 		smoothed = True
 
+		# iterates over every node in linked list (minus termini)
 		while next_node != None:
 
-			if curr_node.get_status() != True:
+			# restricts application of colinear approximatory to
+			# if current node is not involved in a currently knotted section 
+			if curr_node.get_status() != True: 
 				colinear_check = operations.tube_eval(prev_node.get_data(),
 													  curr_node.get_data(), 
 													  next_node.get_data())
@@ -312,7 +321,9 @@ class knotFinder():
 					else:
 						next_node = None
 
-					continue
+					continue # restarts loop
+
+			# section of code is only run if program fails colinearity check
 
 			smoothed = False
 
@@ -325,16 +336,21 @@ class knotFinder():
 
 			knot_presence = False
 		
+			# if backwards traversal is possible (n => 4)
+			# checks backwards first cause traversal is usually shorter
 			if prev_node != head:
 				backward_result = operations.backward_search(prev_tri, next_tri, prev_node)
 			else:
 				backward_result = 0
 
+			# if backwards result yielded no knot, check downstream of triangle
 			if backward_result == 0:
 				forward_result = operations.forward_search(prev_tri, next_tri, next_node)
 			else:
 				forward_result = 1
 
+			# if knot is detected, parameters in nodes is marked as possibly being 
+			# involved in the detection of a knot. 
 			if forward_result == 1 or backward_result == 1:
 				if curr_node.get_status() != True:
 					prev_node.set_status(True)
@@ -349,7 +365,9 @@ class knotFinder():
 					curr_node.set_status(False)
 					next_node.set_status(False)
 		
-						
+
+			# section for traversing the linked list. If knot was detected, next node is set to current and so on
+			# if a knot is not detected, current node is replaced with i prime			
 			if knot_presence == True:
 				prev_node = curr_node
 				curr_node = prev_node.get_next()
@@ -374,10 +392,12 @@ class knotFinder():
 
 	def scan_aux(head):
 
+		# iteration accumulator variable
 		iterations = 1
 
 		while True:
 
+			# call knot finder scanning function 
 			knots = knotFinder.scan(head)
 
 			iterations += 1
@@ -391,6 +411,8 @@ class knotFinder():
 				knot_pos = []
 				current = head
 
+				# checks current linked list for any proteins potentially involved in knots.
+				# returns their positions if true 
 				while current != None:
 
 					if current.get_status() == True:
@@ -399,7 +421,7 @@ class knotFinder():
 					current = current.get_next()
 
 
-				if len(knot_pos) == 0:
+				if len(knot_pos) == 0: # if no knots detected
 
 					print("*** Max iterations reached and no knot detected. Visualize to confirm. ***")
 					print("*** If complete smoothing is required, an increase in Epsilon or ***")
@@ -413,6 +435,7 @@ class knotFinder():
 				print("*** Time Elapsed: %s seconds ***" % round((time.time() - start_time), 2))
 				return
 
+			 # if true collinearity was achieved.
 			if knots == 0:
 				print("*** Smoothing was able to be completed. No knot is likely present ***")
 				print("*** Time Elapsed: %s seconds ***" % round((time.time() - start_time), 2))
@@ -435,17 +458,21 @@ class findApp():
 		global MaxIterations
 		global Epsilon 
 
+		# set parameters for find function
 		MaxIterations = max_iterations
 		Epsilon = epsilon
 
+		# instantiate protein class and set pointer to AA chain (linked list).
 		pro_sequence = protein(InputFile)
 		aa_chain = pro_sequence.backbone
 
 		print("*** Beginning Knot Detection... ***")
 		print("*** Max Iterations:", MaxIterations, "Epsilon:", Epsilon, "***")
 
+		# begin finding knots
 		knotFinder.scan_aux(aa_chain)
 
+		# write output of smoothed file
 		operations.crd_write(aa_chain, OutputFile)
 
 
@@ -459,9 +486,11 @@ class visualizeApp():
 
 	def start(self, InputFile):
 
+		# instantiate protein class and set pointer to AA chain (linked list).
 		pro_sequence = protein(InputFile)
 		aa_chain = pro_sequence.backbone
 
+		# visualize chain
 		operations.visualize(aa_chain)
 
 
