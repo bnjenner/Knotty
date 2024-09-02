@@ -3,7 +3,7 @@ knotty.py
 ####################
 
 DESCRIPTION:
-	Python tool for knot detection using implementation of the Taylor Knot Detection Algorithm and protein structure visualization.
+	Python tool for knot detection in protein structures using implementation of the Taylor Knot Detection Algorithm and protein structure visualization.
 	
 USAGE:
 	knotty.py [FUNCTION] [OPTIONS]
